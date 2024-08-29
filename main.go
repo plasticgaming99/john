@@ -41,6 +41,8 @@ func main() {
 			if len(os.Args) <= 1 {
 				fmt.Println("release needs 1 more options.")
 			}
+		case "help":
+			help()
 		default:
 			fmt.Printf("invaild command: %s \n", os.Args[1])
 		}
@@ -60,9 +62,10 @@ func help() {
 
 func installnvim(nvimver string) {
 	Check4dir("downloads")
-	downloaddir := Getjohndir() + "downloads"
+	downloaddir := Getjohndir() + "downloads/temp"
 	//exec.Command(SplitCmd(fmt.Sprintf(downloader, "https://github.com/neovim/neovim/releases/download/"+nvimver+Gettargetfile(), downloaddir)))
-	exec.Command("curl", "-O https://github.com/neovim/neovim/releases/download/"+nvimver+"/"+Gettargetfile()+" -o "+downloaddir)
+	fmt.Println("curl", "-#L", "https://github.com/neovim/neovim/releases/download/"+nvimver+Gettargetfile(), "-o", downloaddir+Gettargetfile())
+	executecmd("curl", "-#L", "https://github.com/neovim/neovim/releases/download/"+nvimver+Gettargetfile(), "-o", downloaddir+Gettargetfile())
 
 	// install nvim
 	Check4dir("versions")
@@ -77,11 +80,9 @@ func installnvim(nvimver string) {
 	fmt.Println(installto)
 
 	Check4dir("downloads/temp")
-	out, _ := exec.Command("ls", "-l").Output()
-	fmt.Println(out)
-	fmt.Println()
+
 	if os, _ := DetectOS(); os == "windows" {
-		exec.Command("unzip", Getjohndir()+"/downloads/"+Gettargetfile()+" -d "+Getjohndir()+"/downloads/temp")
+		executecmd("tar", "-xvf", Getjohndir()+"/downloads/temp"+Gettargetfile(), "-C", Getjohndir()+"/rolling")
 	}
 }
 
@@ -168,4 +169,13 @@ func SplitCmd(inputcmd string) (string, string) {
 	firstcmd := slicedcmd[0]
 	argument := strings.Join(slicedcmd[1:], " ")
 	return firstcmd, argument
+}
+
+func executecmd(cmdname string, args ...string) {
+	toexec := exec.Command(cmdname, args...)
+	toexec.Stdin = os.Stdin
+	toexec.Stdout = os.Stdout
+	toexec.Stderr = os.Stderr
+	toexec.Start()
+	toexec.Wait()
 }
